@@ -1,10 +1,13 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
-const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const Code = require("./models/Code");
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (_, res) => {
     res.end('Hello World!');
@@ -15,6 +18,9 @@ app.post('/submit', fileUpload({
 }), (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
+    }
+    if(!req.body.teamName) {
+        return res.status(400).send('Team name is required.');
     }
     const codeFile = req.files.codeFile;
     const fileExtension = codeFile.name.split('.').pop();
@@ -27,7 +33,16 @@ app.post('/submit', fileUpload({
         if (err) {
             return res.status(500).send(err);
         }
-        res.send('File uploaded!'); //TODO: return _id
+        const code = new Code({
+            team: req.body.teamName,
+            code: uniqueId + '.' + fileExtension
+        });
+        code.save().then(_doc => {
+            const _id = _doc._id.toString();
+            res.end(_id);
+        }).catch((err) => {
+            res.status(500).send(err);
+        });
     });
 });
 
