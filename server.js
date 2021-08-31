@@ -13,6 +13,7 @@ const db_host = process.env.DB_HOST || 'localhost';
 const db_port = process.env.DB_PORT || 4040;
 const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
 
+//TODO: Add logger
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -53,6 +54,27 @@ app.post('/submit', fileUpload({
             res.status(500).send(err);
         });
     });
+});
+
+app.post('/compile-result', (req, res) => {
+    if(!req.body._id) {
+        return res.status(400).send('_id is required.');
+    }
+    if(!req.body.compile_status) {
+        return res.status(400).send('compile_status is required.');
+    }
+    const _id = req.body._id;
+    const compile_status = req.body.compile_status;
+    const compile_message = req.body.compile_message;
+    Code.findByIdAndUpdate(_id, {
+        compile_status,
+        compile_message
+    }).then(_ => {
+        //TODO: send result to backend
+        res.end('OK');
+    }).catch(err => {
+        res.status(500).send(err);
+    })
 });
 
 mongoose.connect(connectionString, {
