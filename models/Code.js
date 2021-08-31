@@ -9,7 +9,17 @@ const codeSchema = new Schema({
     code: {
         type: String,
         required: true
-    }
+    },
+    compile_status: {
+        type: String,
+        default: 'Pending',
+        enum: [
+            'Pending',
+            'Error',
+            'Success'
+        ]
+    },
+    compile_message: String
 }, {
     timestamps: {
         createdAt: 'created_at',

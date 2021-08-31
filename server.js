@@ -2,9 +2,16 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 const Code = require("./models/Code");
+const { compileCode } = require("./utils");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
+const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
+const db_name = process.env.DB_NAME || 'aicup';
+const db_host = process.env.DB_HOST || 'localhost';
+const db_port = process.env.DB_PORT || 4040;
+const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,30 +35,25 @@ app.post('/submit', fileUpload({
         return res.status(400).send('Invalid file extension.');
     }
     const uniqueId = new Date().getTime().toString() + '-' + Math.floor(Math.random() * 1000).toString();
-    const uploadPath = `${__dirname}/uploads/${uniqueId + '.' + fileExtension}`;
+    const newFileName = uniqueId + '.' + fileExtension;
+    const uploadPath = `${__dirname}/uploads/${newFileName}`;
     codeFile.mv(uploadPath, (err) => {
         if (err) {
             return res.status(500).send(err);
         }
         const code = new Code({
             team: req.body.teamName,
-            code: uniqueId + '.' + fileExtension
+            code: newFileName
         });
         code.save().then(_doc => {
             const _id = _doc._id.toString();
+            compileCode(_id, newFileName);
             res.end(_id);
         }).catch((err) => {
             res.status(500).send(err);
         });
     });
 });
-
-const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
-const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
-const db_name = process.env.DB_NAME || 'aicup';
-const db_host = process.env.DB_HOST || 'localhost';
-const db_port = process.env.DB_PORT || 4040;
-const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
 
 mongoose.connect(connectionString, {
     useNewUrlParser: true,
