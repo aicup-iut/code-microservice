@@ -1,5 +1,7 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,6 +31,23 @@ app.post('/submit', fileUpload({
     });
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
+const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
+const db_name = process.env.DB_NAME || 'aicup';
+const db_host = process.env.DB_HOST || 'localhost';
+const db_port = process.env.DB_PORT || 4040;
+const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
+
+mongoose.connect(connectionString, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+    .then(() => {
+        console.log(`Connected to MongoDB\nDatabase name is ${db_name}`);
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`);
+        });
+    })
+    .catch((err) => {
+        console.log('Error connecting to MongoDB: ' + err);
+    });

@@ -1,0 +1,13 @@
+version: '3.8'
+services: 
+  micro_db:
+    image: 'mongo'
+    container_name: 'micro_db'
+    ports: 
+      - '4040:27017'
+    volumes: 
+      - micro_db:/data/db
+    env_file: 
+      - '.db.env'
+volumes: 
+  micro_db:
