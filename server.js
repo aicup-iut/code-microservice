@@ -2,7 +2,8 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 const Code = require("./models/Code");
-const { compileCode } = require("./utils");
+const Match = require("./models/Match");
+const { compileCode, runMatch } = require("./utils");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -75,6 +76,31 @@ app.post('/compile-result', (req, res) => {
     }).catch(err => {
         res.status(500).send(err);
     })
+});
+
+app.post('/friendly-match', async(req, res) => {
+    if(!req.body.firstTeam) {
+        return res.status(400).send('First team is required.');
+    }
+    if(!req.body.secondTeam) {
+        return res.status(400).send('Second team is required.');
+    }
+    const firstTeamRecord = await Code.findById(req.body.firstTeam);
+    const secondTeamRecord = await Code.findById(req.body.secondTeam);
+    if(!firstTeamRecord || !secondTeamRecord) {
+        return res.status(400).send('Invalid team id.');
+    }
+    if(firstTeamRecord.compile_status !== 'success' || secondTeamRecord.compile_status !== 'success') {
+        return res.status(400).send('One of the teams is not compiled.');
+    }
+    const match = new Match({
+        firstTeam: firstTeamRecord._id,
+        secondTeam: secondTeamRecord._id,
+        isFriendly: true
+    });
+    await match.save();
+    runMatch(match._id.toString(), firstTeamRecord.code, secondTeamRecord.code);
+    res.end('OK');
 });
 
 mongoose.connect(connectionString, {

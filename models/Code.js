@@ -12,11 +12,11 @@ const codeSchema = new Schema({
     },
     compile_status: {
         type: String,
-        default: 'Pending',
+        default: 'pending',
         enum: [
-            'Pending',
-            'Error',
-            'Success'
+            'pending',
+            'error',
+            'success'
         ]
     },
     compile_message: String
