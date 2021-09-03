@@ -114,6 +114,23 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
+    //TODO: send to back-end
+    res.end('OK');
+});
+
+app.post('/tournament', (req, res) => {
+    //check if teams exist
+    if(!req.body.teams) {
+        return res.status(400).send('Teams are required.');
+    }
+    const teams = req.body.teams;
+    if(!Array.isArray(teams)) {
+        return res.status(400).send('Teams must be an array.');
+    }
+    if(teams.length < 2) {
+        return res.status(400).send('At least 2 teams are required.');
+    }
+    console.log(teams); //TODO: Start me!
     res.end('OK');
 });
 
