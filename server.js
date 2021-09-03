@@ -103,6 +103,20 @@ app.post('/friendly-match', async(req, res) => {
     res.end('OK');
 });
 
+app.post('/match-result', async(req, res) => {
+    if(!req.body.match_id) {
+        return res.status(400).send('match_id is required.');
+    }
+    if(req.body.winner === undefined) {
+        return res.status(400).send('winner is required.');
+    }
+    const matchRecord = await Match.findById(req.body.match_id);
+    matchRecord.status = 'finished';
+    matchRecord.winner = req.body.winner;
+    await matchRecord.save();
+    res.end('OK');
+});
+
 mongoose.connect(connectionString, {
     useNewUrlParser: true,
     useUnifiedTopology: true
