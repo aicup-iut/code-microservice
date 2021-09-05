@@ -1,6 +1,8 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
+const axsios = require('axios');
+
 const Code = require("./models/Code");
 const Match = require("./models/Match");
 const { compileCode, runMatch } = require("./utils");
@@ -71,7 +73,16 @@ app.post('/compile-result', (req, res) => {
         compile_status,
         compile_message
     }).then(_ => {
-        //TODO: send result to backend
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+        axsios.post(`${backendUrl}/codes/compile-code/`, {
+            code_id: _id,
+            status: compile_status,
+            message: compile_message
+        }).then(result => {
+            res.status(result.status).send('End');
+        }).catch(err => {
+            res.status(500).send(err);
+        });
         res.end('OK');
     }).catch(err => {
         res.status(500).send(err);
