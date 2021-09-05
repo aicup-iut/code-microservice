@@ -79,14 +79,17 @@ app.post('/compile-result', (req, res) => {
 });
 
 app.post('/friendly-match', async(req, res) => {
-    if(!req.body.firstTeam) {
+    if(!req.body.first_team_code_id) {
         return res.status(400).send('First team is required.');
     }
-    if(!req.body.secondTeam) {
+    if(!req.body.second_team_code_id) {
         return res.status(400).send('Second team is required.');
     }
-    const firstTeamRecord = await Code.findById(req.body.firstTeam);
-    const secondTeamRecord = await Code.findById(req.body.secondTeam);
+    if(!req.body.match_result_id) {
+        return res.status(400).send('Match result is required.');
+    }
+    const firstTeamRecord = await Code.findById(req.body.first_team_code_id);
+    const secondTeamRecord = await Code.findById(req.body.second_team_code_id);
     if(!firstTeamRecord || !secondTeamRecord) {
         return res.status(400).send('Invalid team id.');
     }
@@ -96,7 +99,8 @@ app.post('/friendly-match', async(req, res) => {
     const match = new Match({
         firstTeam: firstTeamRecord._id,
         secondTeam: secondTeamRecord._id,
-        isFriendly: true
+        isFriendly: true,
+        game_id: req.body.match_result_id
     });
     await match.save();
     runMatch(match._id.toString(), firstTeamRecord.code, secondTeamRecord.code);

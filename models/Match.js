@@ -23,7 +23,8 @@ const matchSchema = new Schema({
         ],
         default: 'ongoing'
     },
-    winner: Boolean
+    winner: Boolean,
+    game_id: String
 }, {
     timestamps: {
         createdAt: 'created_at',
