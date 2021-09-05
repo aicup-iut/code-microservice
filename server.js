@@ -23,7 +23,7 @@ app.get('/', (_, res) => {
 });
 
 app.post('/submit', fileUpload({
-    limits: { fileSize: 20 * 1024 * 1024 }
+    limits: { fileSize: 16 * 1024 * 1024 }
 }), (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
@@ -31,7 +31,7 @@ app.post('/submit', fileUpload({
     if(!req.body.teamName) {
         return res.status(400).send('Team name is required.');
     }
-    const codeFile = req.files.codeFile;
+    const codeFile = req.files.file;
     const fileExtension = codeFile.name.split('.').pop();
     if(!(fileExtension === 'cpp' || fileExtension === 'py' || fileExtension === 'java')) {
         return res.status(400).send('Invalid file extension.');
