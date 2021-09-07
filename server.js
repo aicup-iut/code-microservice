@@ -1,7 +1,10 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
-const axsios = require('axios');
+const axios = require('axios');
+const fs = require('fs');
+const FormData = require('form-data');
+const { request } = require('http');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
@@ -9,6 +12,7 @@ const { compileCode, runMatch } = require("./utils");
 
 const app = express();
 const port = process.env.PORT || 3000;
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
 const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
 const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
 const db_name = process.env.DB_NAME || 'aicup';
@@ -73,8 +77,7 @@ app.post('/compile-result', (req, res) => {
         compile_status,
         compile_message
     }).then(_ => {
-        const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
-        axsios.post(`${backendUrl}/codes/compile-code/`, {
+        axios.post(`${backendUrl}/codes/compile-code/`, {
             code_id: _id,
             status: compile_status,
             message: compile_message
@@ -129,7 +132,10 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
-    //TODO: send to back-end
+    const testfile = fs.readFileSync(`${__dirname}/uploads/logs/6134c46706aa0c6b6491502b-game.log`);
+    const requesturl = `${backendUrl}/match/match-result-friendly/`;
+    //TODO: if
+    //TODO: else
     res.end('OK');
 });
 
