@@ -3,8 +3,6 @@ const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
-const FormData = require('form-data');
-const { request } = require('http');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
@@ -132,11 +130,21 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
-    const testfile = fs.readFileSync(`${__dirname}/uploads/logs/6134c46706aa0c6b6491502b-game.log`);
-    const requesturl = `${backendUrl}/match/match-result-friendly/`;
-    //TODO: if
+    const serverLog = fs.readFileSync(`${__dirname}/uploads/logs/${matchRecord._id}-server.log`);
+    const gameLog = fs.readFileSync(`${__dirname}/uploads/logs/${matchRecord._id}-game.log`);
+    if(matchRecord.isFriendly) {
+        axios.post(`${backendUrl}/match/match-result-friendly/`, {
+            code_id: matchRecord.winner,
+            match_result_id: matchRecord.game_id,
+            server_hash: Buffer.from(serverLog.toString()).toString('base64'),
+            game_hash: Buffer.from(gameLog.toString()).toString('base64')
+        }).then(result => {
+            return res.status(200).send('OK');
+        }).catch(err => {
+            return res.status(500).send(err);
+        });
+    }
     //TODO: else
-    res.end('OK');
 });
 
 app.post('/tournament', (req, res) => {
