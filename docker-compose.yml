@@ -1,5 +1,16 @@
 version: '3.8'
-services: 
+services:
+  micro_service:
+    build: .
+    image: 'micro-service'
+    container_name: 'micro-service'
+    ports:
+      - '3000:3000'
+    env_file:
+      - '.db.env'
+      - '.micro.env'
+    networks:
+      - micronet
   micro_db:
     image: 'mongo'
     container_name: 'micro_db'
@@ -9,5 +20,9 @@ services:
       - micro_db:/data/db
     env_file: 
       - '.db.env'
+    networks:
+      - micronet
 volumes: 
   micro_db:
+networks:
+  micronet:
