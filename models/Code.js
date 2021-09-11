@@ -14,9 +14,9 @@ const codeSchema = new Schema({
         type: String,
         default: 'pending',
         enum: [
-            'pending',
-            'error',
-            'success'
+            'Pending',
+            'Error',
+            'Success'
         ]
     },
     compile_message: String

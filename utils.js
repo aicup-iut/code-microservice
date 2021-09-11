@@ -6,7 +6,7 @@ const compileCode = (_id, code) => {
 
 const runMatch = (match_id, code1, code2) => {
     console.log('running match...');
-    console.log(match_id, code1, code2);
+    console.log(match_id, code1, code2); //TODO: Adding team names
     //TODO
 }
 

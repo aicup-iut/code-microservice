@@ -1,4 +1,0 @@
-- We save maps in uploads/maps/
-- We save logs in uploads/logs/{match_id}-{server/game}.log
-
-#TODO:: Random walk bot

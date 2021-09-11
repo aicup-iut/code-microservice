@@ -12,6 +12,7 @@ const { compileCode, runMatch } = require("./utils");
 const app = express();
 const port = process.env.PORT || 3000;
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+const uploadRootDir = process.env.UPLOAD_ROOT_DIR || `${__dirname}/uploads`;
 const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
 const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
 const db_name = process.env.DB_NAME || 'aicup';
@@ -38,12 +39,12 @@ app.post('/submit', fileUpload({
     }
     const codeFile = req.files.file;
     const fileExtension = codeFile.name.split('.').pop();
-    if(!(fileExtension === 'cpp' || fileExtension === 'py' || fileExtension === 'java')) {
+    if(fileExtension !== 'zip') {
         return res.status(400).send('Invalid file extension.');
     }
     const uniqueId = new Date().getTime().toString() + '-' + Math.floor(Math.random() * 1000).toString();
-    const newFileName = uniqueId + '.' + fileExtension;
-    const uploadPath = `${__dirname}/uploads/${newFileName}`;
+    const newFileName = uniqueId + '.zip';
+    const uploadPath = `${uploadRootDir}/codes/${newFileName}`;
     codeFile.mv(uploadPath, (err) => {
         if (err) {
             return res.status(500).send(err);
@@ -106,7 +107,7 @@ app.post('/friendly-match', async(req, res) => {
     if(!firstTeamRecord || !secondTeamRecord) {
         return res.status(400).send('Invalid team id.');
     }
-    if(firstTeamRecord.compile_status !== 'success' || secondTeamRecord.compile_status !== 'success') {
+    if(firstTeamRecord.compile_status !== 'Success' || secondTeamRecord.compile_status !== 'Success') {
         return res.status(400).send('One of the teams is not compiled.');
     }
     const match = new Match({
@@ -131,8 +132,9 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
-    const serverLog = fs.readFileSync(`${__dirname}/uploads/logs/${matchRecord._id}-server.log`);
-    const gameLog = fs.readFileSync(`${__dirname}/uploads/logs/${matchRecord._id}-game.log`);
+    const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-game.json`);
+    const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-server.log`);
+
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
             code_id: matchRecord.winner,
@@ -146,22 +148,6 @@ app.post('/match-result', async(req, res) => {
         });
     }
     //TODO: else
-});
-
-app.post('/tournament', (req, res) => {
-    //check if teams exist
-    if(!req.body.teams) {
-        return res.status(400).send('Teams are required.');
-    }
-    const teams = req.body.teams;
-    if(!Array.isArray(teams)) {
-        return res.status(400).send('Teams must be an array.');
-    }
-    if(teams.length < 2) {
-        return res.status(400).send('At least 2 teams are required.');
-    }
-    console.log(teams); //TODO: Start me!
-    res.end('OK');
 });
 
 mongoose.connect(connectionString, {
