@@ -3,6 +3,7 @@ const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
+const logger = require('morgan');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
@@ -18,7 +19,7 @@ const db_host = process.env.DB_HOST || 'localhost';
 const db_port = process.env.DB_PORT || 4040;
 const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
 
-//TODO: Add logger
+app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
