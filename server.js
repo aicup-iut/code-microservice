@@ -94,18 +94,6 @@ app.post('/submit', fileUpload({
                 fs.rmSync(uploadPath);
             });
         });
-        
-        // const code = new Code({
-        //     team: req.body.teamName,
-        //     code: newFileName
-        // });
-        // code.save().then(_doc => {
-        //     const _id = _doc._id.toString();
-        //     compileCode(_id, newFileName);
-        //     res.end(_id);
-        // }).catch((err) => {
-        //     res.status(500).send(err);
-        // });
     });
 });
 
