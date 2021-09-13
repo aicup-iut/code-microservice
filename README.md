@@ -11,7 +11,7 @@
 ## Infra APIs
 - (compile)
   - POST
-  - { _id: string, file_name: string }
+  - { _id: string, code_folder_name: string }
 - (run_match)
   - POST
   - { match_id: string, team1_file_name: string, team1_name: string, team2_file_name: string, team2_name: string }

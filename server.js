@@ -116,11 +116,10 @@ app.post('/compile-result', (req, res) => {
             status: compile_status,
             message: compile_message
         }).then(result => {
-            res.status(result.status).send('End');
+            res.status(result.status).send('OK');
         }).catch(err => {
             res.status(500).send(err);
         });
-        res.end('OK');
     }).catch(err => {
         res.status(500).send(err);
     })
