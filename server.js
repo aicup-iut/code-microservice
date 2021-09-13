@@ -150,7 +150,7 @@ app.post('/friendly-match', async(req, res) => {
         game_id: req.body.match_result_id
     });
     await match.save();
-    runMatch(match._id.toString(), firstTeamRecord.code, secondTeamRecord.code);
+    runMatch(match._id.toString(), firstTeamRecord.team, firstTeamRecord.code, secondTeamRecord.team, secondTeamRecord.code);
     res.end('OK');
 });
 
@@ -165,6 +165,7 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
+    //TODO: Refactor??
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-server.log`);
 

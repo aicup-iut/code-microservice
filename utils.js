@@ -18,12 +18,11 @@ const compileCode = (_id, code) => {
     }
 }
 
-const runMatch = (match_id, code1, code2) => {
+const runMatch = (match_id, team1, code1, team2, code2) => {
     const haveResource = resourceChecker('MATCH');
     if (haveResource) {
         console.log('Running match...');
-        //TODO: Adding team names
-        console.log(match_id, code1, code2); //TODO: API Call
+        console.log(match_id, team1, code1, team2, code2); //TODO: API Call
     } else {
         console.log('No Resource for match...');
         const currentDate = new Date();
