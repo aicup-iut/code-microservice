@@ -10,9 +10,18 @@ const codeSchema = new Schema({
         type: String,
         required: true
     },
+    lang: {
+        type: String,
+        enum: [
+            'cpp',
+            'py',
+            'java'
+        ],
+        required: true
+    },
     compile_status: {
         type: String,
-        default: 'pending',
+        default: 'Pending',
         enum: [
             'Pending',
             'Error',

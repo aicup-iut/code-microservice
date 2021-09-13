@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
 const logger = require('morgan');
+const unzipper = require('unzipper');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
@@ -44,22 +45,67 @@ app.post('/submit', fileUpload({
     }
     const uniqueId = new Date().getTime().toString() + '-' + Math.floor(Math.random() * 1000).toString();
     const newFileName = uniqueId + '.zip';
-    const uploadPath = `${uploadRootDir}/codes/${newFileName}`;
+    const uploadPath = `${uploadRootDir}/tmp/${newFileName}`;
+    fs.mkdirSync(`${uploadRootDir}/codes/${uniqueId}`);
+    const workingDir = `${uploadRootDir}/codes/${uniqueId}/input`;
+    fs.mkdirSync(workingDir);
+    fs.mkdirSync(`${uploadRootDir}/codes/${uniqueId}/output`);
     codeFile.mv(uploadPath, (err) => {
         if (err) {
             return res.status(500).send(err);
         }
-        const code = new Code({
-            team: req.body.teamName,
-            code: newFileName
+        fs.createReadStream(uploadPath)
+        .pipe(unzipper.Extract({ path: workingDir }))
+        .on('close', () => {
+            fs.readdir(workingDir, (err, files) => {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+                let len = files.length;
+                let model = false;
+                let lang = 'None';
+                files.forEach(file => {
+                    if(!(file === 'main.cpp' || file === 'main.py' || file === 'main.java' || file === 'model')){
+                        fs.rmSync(`${workingDir}/${file}`);
+                        len--;
+                    }else {
+                        if(file == 'model') model = true;
+                        else {
+                            if(lang !== 'None') len = -1000; //to generate error
+                            lang = file.split('.').pop();
+                        }
+                    }
+                });
+                if((len < 1 || len > 2) || (len === 1 && model))
+                    return res.status(400).send('Invalid file structure.');
+                //Finally save the data
+                const code = new Code({
+                    team: req.body.teamName,
+                    code: uniqueId,
+                    lang: lang
+                });
+                code.save().then(_doc => {
+                    const _id = _doc._id.toString();
+                    compileCode(_id, uniqueId);
+                    res.end(_id);
+                }).catch((err) => {
+                    res.status(500).send(err);
+                });
+                fs.rmSync(uploadPath);
+            });
         });
-        code.save().then(_doc => {
-            const _id = _doc._id.toString();
-            compileCode(_id, newFileName);
-            res.end(_id);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
+        
+        // const code = new Code({
+        //     team: req.body.teamName,
+        //     code: newFileName
+        // });
+        // code.save().then(_doc => {
+        //     const _id = _doc._id.toString();
+        //     compileCode(_id, newFileName);
+        //     res.end(_id);
+        // }).catch((err) => {
+        //     res.status(500).send(err);
+        // });
     });
 });
 
