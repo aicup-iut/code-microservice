@@ -2,10 +2,12 @@ version: '3.8'
 services:
   micro_service:
     build: .
-    image: 'micro-service'
-    container_name: 'micro-service'
+    image: 'micro_service'
+    container_name: 'micro_service'
     ports:
       - '3000:3000'
+    volumes: 
+      - micro_root_folder:/app/uploads
     env_file:
       - '.db.env'
       - '.micro.env'
@@ -14,7 +16,7 @@ services:
   micro_db:
     image: 'mongo'
     container_name: 'micro_db'
-    ports: 
+    ports: #we need this for accessing db from outside!(For Testing)
       - '4040:27017'
     volumes: 
       - micro_db_data:/data/db
@@ -24,5 +26,6 @@ services:
       - micronet
 volumes: 
   micro_db_data:
+  micro_root_folder:
 networks:
   micronet:
