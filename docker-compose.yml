@@ -17,12 +17,12 @@ services:
     ports: 
       - '4040:27017'
     volumes: 
-      - micro_db:/data/db
+      - micro_db_data:/data/db
     env_file: 
       - '.db.env'
     networks:
       - micronet
 volumes: 
-  micro_db:
+  micro_db_data:
 networks:
   micronet:
