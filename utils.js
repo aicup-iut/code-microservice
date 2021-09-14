@@ -9,7 +9,16 @@ const compileCode = (_id, code) => {
     const haveResource = resourceChecker('COMPILE');
     if (haveResource) {
         console.log('Compiling code...');
-        console.log(_id, code); //TODO: API Call
+        console.log(_id, code);
+        const infra_url = process.env.INFRA_URL;
+        axios.post(`${infra_url}/deployment/compile/`, {
+            _id: _id,
+            code_folder_name: code
+        }).then(result => {
+            console.log(result);
+        }).catch(err => {
+            console.error(err);
+        });
     } else {
         console.log('No Resource for compile...');
         const currentDate = new Date();
