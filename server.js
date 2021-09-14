@@ -165,9 +165,8 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
-    //TODO: Refactor??
-    const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-game.json`);
-    const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}-server.log`);
+    const gameLog = fs.readFileSync(`${uploadRootDir}/games/${matchRecord._id}/game.json`);
+    const serverLog = fs.readFileSync(`${uploadRootDir}/games/${matchRecord._id}/server.log`);
 
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
