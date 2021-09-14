@@ -114,7 +114,8 @@ app.post('/compile-result', (req, res) => {
         axios.post(`${backendUrl}/codes/compile-code/`, {
             code_id: _id,
             status: compile_status,
-            message: compile_message
+            message: compile_message,
+            key_secret: process.env.KEY_SECRET
         }).then(result => {
             res.status(result.status).send('OK');
         }).catch(err => {
@@ -173,7 +174,8 @@ app.post('/match-result', async(req, res) => {
             code_id: matchRecord.winner,
             match_result_id: matchRecord.game_id,
             server_hash: Buffer.from(serverLog.toString()).toString('base64'),
-            game_hash: Buffer.from(gameLog.toString()).toString('base64')
+            game_hash: Buffer.from(gameLog.toString()).toString('base64'),
+            key_secret: process.env.KEY_SECRET
         }).then(result => {
             return res.status(200).send('OK');
         }).catch(err => {
