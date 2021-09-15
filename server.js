@@ -110,7 +110,12 @@ app.post('/compile-result', (req, res) => {
     Code.findByIdAndUpdate(_id, {
         compile_status,
         compile_message
-    }).then(_ => {
+    }).then(record => {
+        const client_files = fs.readdirSync(`${uploadRootDir}/codes/${record.code}/input`);
+        if(client_files.includes('model') && compile_status === 'Success'){
+            //copy model to output
+            fs.copyFileSync(`${uploadRootDir}/codes/${record.code}/input/model`, `${uploadRootDir}/codes/${record.code}/output/model`);
+        }
         axios.post(`${backendUrl}/codes/compile-code/`, {
             code_id: _id,
             status: compile_status,
