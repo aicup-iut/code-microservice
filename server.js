@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
 const logger = require('morgan');
-const unzipper = require('unzipper');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
@@ -31,7 +30,7 @@ app.get('/', (_, res) => {
 
 app.post('/submit', fileUpload({
     limits: { fileSize: 16 * 1024 * 1024 }
-}), (req, res) => {
+}), async(req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }
@@ -39,62 +38,28 @@ app.post('/submit', fileUpload({
         return res.status(400).send('Team name is required.');
     }
     const codeFile = req.files.file;
+    const modelFile = req.files.model;
     const fileExtension = codeFile.name.split('.').pop();
-    if(fileExtension !== 'zip') {
+    if(fileExtension !== 'py' && fileExtension !== 'java' && fileExtension !== 'cpp') {
         return res.status(400).send('Invalid file extension.');
     }
     const uniqueId = new Date().getTime().toString() + '-' + Math.floor(Math.random() * 1000).toString();
-    const newFileName = uniqueId + '.zip';
-    const uploadPath = `${uploadRootDir}/tmp/${newFileName}`;
+    const newFileName = 'main.' + fileExtension;
     fs.mkdirSync(`${uploadRootDir}/codes/${uniqueId}`);
-    const workingDir = `${uploadRootDir}/codes/${uniqueId}/input`;
+    const workingDir = `${uploadRootDir}/codes/${uniqueId}/input/`;
     fs.mkdirSync(workingDir);
     fs.mkdirSync(`${uploadRootDir}/codes/${uniqueId}/output`);
-    codeFile.mv(uploadPath, (err) => {
-        if (err) {
-            return res.status(500).send(err);
-        }
-        fs.createReadStream(uploadPath)
-        .pipe(unzipper.Extract({ path: workingDir }))
-        .on('close', () => {
-            fs.readdir(workingDir, (err, files) => {
-                if (err) {
-                    return res.status(500).send(err);
-                }
-                let len = files.length;
-                let model = false;
-                let lang = 'None';
-                files.forEach(file => {
-                    if(!(file === 'main.cpp' || file === 'main.py' || file === 'main.java' || file === 'model')){
-                        fs.rmSync(`${workingDir}/${file}`);
-                        len--;
-                    }else {
-                        if(file == 'model') model = true;
-                        else {
-                            if(lang !== 'None') len = -1000; //to generate error
-                            lang = file.split('.').pop();
-                        }
-                    }
-                });
-                if((len < 1 || len > 2) || (len === 1 && model))
-                    return res.status(400).send('Invalid file structure.');
-                //Finally save the data
-                const code = new Code({
-                    team: req.body.teamName,
-                    code: uniqueId,
-                    lang: lang
-                });
-                code.save().then(_doc => {
-                    const _id = _doc._id.toString();
-                    compileCode(_id, uniqueId);
-                    res.end(_id);
-                }).catch((err) => {
-                    res.status(500).send(err);
-                });
-                fs.rmSync(uploadPath);
-            });
-        });
+    await codeFile.mv(workingDir + newFileName);
+    if(modelFile) await modelFile.mv(workingDir + 'model');
+    const code = new Code({
+        team: req.body.teamName,
+        code: uniqueId,
+        lang: fileExtension
     });
+    const _doc = await code.save()
+    const _id = _doc._id.toString();
+    compileCode(_id, uniqueId);
+    res.end(_id);
 });
 
 app.post('/compile-result', (req, res) => {
