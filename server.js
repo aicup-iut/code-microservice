@@ -156,6 +156,15 @@ app.post('/match-result', async(req, res) => {
     //TODO: else
 });
 
+app.post('/delete-code', async(req, res) => {
+    if(!req.body["code-id"]){
+        return res.status(400).send('code-id is required.');
+    }
+    const _doc = await Code.findById(req.body["code-id"]);
+    fs.rmSync(`${uploadRootDir}/codes/${_doc.code}/output`, { recursive: true, force: true });
+    res.end('OK');
+});
+
 mongoose.connect(connectionString, {
     useNewUrlParser: true,
     useUnifiedTopology: true
