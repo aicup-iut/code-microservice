@@ -4,9 +4,8 @@
 - Raw Codes: `${file_root}/codes/${code_folder_name}/input/main.{py,cpp,java}`
 - Maps: `${file_root}/maps/map.json` (Always take map.json)
 - Logs: 
-  - `${file_root}/logs/${match_id}-game.json`
-  - `${file_root}/logs/${match_id}-server.log`
-- Compiled Codes: `?`
+  - `${file_root}/logs/${match_id}/game.json`
+  - `${file_root}/logs/${match_id}/server.log`
 
 ## Infra APIs
 - (compile)

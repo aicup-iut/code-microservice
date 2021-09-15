@@ -156,6 +156,7 @@ app.post('/friendly-match', async(req, res) => {
         game_id: req.body.match_result_id
     });
     await match.save();
+    fs.mkdirSync(`${uploadRootDir}/logs/${match._id}`);
     runMatch(match._id.toString(), firstTeamRecord.team, firstTeamRecord.code, secondTeamRecord.team, secondTeamRecord.code);
     res.end('OK');
 });
@@ -171,8 +172,8 @@ app.post('/match-result', async(req, res) => {
     matchRecord.status = 'finished';
     matchRecord.winner = req.body.winner;
     await matchRecord.save();
-    const gameLog = fs.readFileSync(`${uploadRootDir}/games/${matchRecord._id}/game.json`);
-    const serverLog = fs.readFileSync(`${uploadRootDir}/games/${matchRecord._id}/server.log`);
+    const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
+    const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
 
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
