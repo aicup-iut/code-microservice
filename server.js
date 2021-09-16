@@ -139,8 +139,9 @@ app.post('/match-result', async(req, res) => {
             content: JSON.stringify(matchRecord)
         });
     }
+    await new Promise(r => setTimeout(r, 250));
     matchRecord.status = 'finished';
-    matchRecord.winner = true;
+    matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
     await matchRecord.save();
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
