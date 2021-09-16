@@ -140,11 +140,10 @@ app.post('/match-result', async(req, res) => {
         });
     }
     matchRecord.status = 'finished';
+    matchRecord.winner = true;
     await matchRecord.save();
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
-    matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
-    await matchRecord.save();
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
             code_id: matchRecord.winner,
