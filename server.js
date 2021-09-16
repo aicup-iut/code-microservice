@@ -130,16 +130,20 @@ app.post('/match-result', async(req, res) => {
     if(!req.body.match_id) {
         return res.status(400).send('match_id is required.');
     }
-    if(req.body.winner === undefined) {
-        return res.status(400).send('winner is required.');
+    if(req.body.status === undefined) {
+        return res.status(400).send('status is required.');
     }
     const matchRecord = await Match.findById(req.body.match_id);
+    if(req.body.status == -1) {
+        axios.post(process.env.WEBHOOKURL, {
+            content: JSON.stringify(matchRecord)
+        });
+    }
     matchRecord.status = 'finished';
-    matchRecord.winner = req.body.winner;
     await matchRecord.save();
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
-
+    matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
             code_id: matchRecord.winner,
