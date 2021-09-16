@@ -29,17 +29,19 @@ const compileCode = (_id, code) => {
     }
 }
 
-const runMatch = (match_id, team1, code1, team2, code2) => {
+const runMatch = (match_id, team1, code1, type1, team2, code2, type2) => {
     const haveResource = resourceChecker('MATCH');
     if (haveResource) {
         console.log('Running match...');
-        console.log(match_id, team1, code1, team2, code2);
+        console.log(match_id, team1, code1, type1, team2, code2, type2);
         axios.post(`${infra_url}/deployment/run_match/`, {
             match_id: match_id,
             team1_file_name: code1,
             team1_name: team1,
+            team1_type: type1,
             team2_file_name: code2,
-            team2_name: team2
+            team2_name: team2,
+            team2_type: type2
         }).then(result => {
             console.log(result);
         }).catch(err => {
