@@ -71,7 +71,7 @@ app.post('/compile-result', (req, res) => {
     }
     const _id = req.body._id;
     const compile_status = req.body.compile_status;
-    const compile_message = req.body.compile_message;
+    const compile_message = req.body.compile_message.toString().slice(0, 4096);
     Code.findByIdAndUpdate(_id, {
         compile_status,
         compile_message
