@@ -139,7 +139,9 @@ app.post('/match-result', async(req, res) => {
             content: JSON.stringify(matchRecord)
         });
     }
-    await new Promise(r => setTimeout(r, 250));
+    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('WINNER')){
+        await new Promise(r => setTimeout(r, 250));
+    }
     matchRecord.status = 'finished';
     matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
     await matchRecord.save();
