@@ -18,6 +18,16 @@ app.get('/drive', async(_, res) => {
     res.end(JSON.stringify(await drive.info()));
 });
 
+app.get('/ok', async(_, res) => {
+    const fcpu = JSON.stringify(await cpu.free());
+    let fmem = JSON.stringify(await mem.free());
+    fmem = JSON.parse(fmem);
+    fmem = fmem["freeMemMb"] / fmem["totalMemMb"] * 100;
+    const ans = (fcpu > 15.0 && fmem > 15.0) ? "OK" : "NOT OK";
+    console.log(`CPU: ${fcpu} && MEM: ${fmem} && ANS: ${ans}`);
+    res.end(ans);
+});
+
 app.listen(5000, () => {
     console.log("Server running on port 5000");
 });
