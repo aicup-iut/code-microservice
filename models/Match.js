@@ -19,7 +19,8 @@ const matchSchema = new Schema({
         type: String,
         enum: [
             'ongoing', 
-            'finished'
+            'finished',
+            'failed'
         ],
         default: 'ongoing'
     },

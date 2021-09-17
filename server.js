@@ -134,13 +134,24 @@ app.post('/match-result', async(req, res) => {
         return res.status(400).send('status is required.');
     }
     const matchRecord = await Match.findById(req.body.match_id);
+    let polling_count = 0;
     if(req.body.status == -1) {
-        axios.post(process.env.WEBHOOKURL, {
-            content: JSON.stringify(matchRecord)
+        await axios.post(process.env.WEBHOOKURL, {
+            content: "Match returned -1"
         });
+        polling_count = 10;
     }
-    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('WINNER')){
+    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('WINNER') && polling_count < 10) {
+        polling_count++;
         await new Promise(r => setTimeout(r, 250));
+    }
+    if(polling_count >= 10) {
+        matchRecord.status = 'failed';
+        await matchRecord.save();
+        await axios.post(process.env.WEBHOOKURL, {
+            content: "Match Failed :: " + JSON.stringify(matchRecord)
+        });
+        return res.status(400).send(`Match ${req.body.match_id} failed!`);
     }
     matchRecord.status = 'finished';
     matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
@@ -160,7 +171,6 @@ app.post('/match-result', async(req, res) => {
             return res.status(500).send(err);
         });
     }
-    //TODO: else
 });
 
 app.post('/delete-code', async(req, res) => {
