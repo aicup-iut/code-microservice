@@ -141,7 +141,7 @@ app.post('/match-result', async(req, res) => {
         });
         polling_count = 10;
     }
-    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('WINNER') && polling_count < 10) {
+    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 10) {
         polling_count++;
         await new Promise(r => setTimeout(r, 250));
     }
@@ -154,10 +154,11 @@ app.post('/match-result', async(req, res) => {
         return res.status(400).send(`Match ${req.body.match_id} failed!`);
     }
     matchRecord.status = 'finished';
-    matchRecord.winner = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/WINNER`) == '1';
-    await matchRecord.save();
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
+    const gameJson = JSON.parse(gameLog);
+    matchRecord.winner = (gameJson["initial_game_data"].winnerId) - 1;
+    await matchRecord.save();
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
             code_id: matchRecord.winner,
