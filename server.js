@@ -157,7 +157,7 @@ app.post('/match-result', async(req, res) => {
     const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
     const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
     const gameJson = JSON.parse(gameLog);
-    matchRecord.winner = (gameJson["initial_game_data"].winnerId) - 1;
+    matchRecord.winner = gameJson["initial_game_data"].winnerId - 1;
     await matchRecord.save();
     if(matchRecord.isFriendly) {
         axios.post(`${backendUrl}/match/match-result-friendly/`, {
