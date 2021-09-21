@@ -1,8 +1,11 @@
 const schedule = require('node-schedule');
 const axios = require('axios');
+const fs = require('fs');
 
 const infra_url = process.env.INFRA_URL;
 const resourceChecker_url = process.env.RESOURCE_CHECKER_URL || 'http://localhost:5000';
+const uploadRootDir = process.env.UPLOAD_ROOT_DIR || `${__dirname}/uploads`;
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
 
 const resourceChecker = mode => {
     return axios.get(`${resourceChecker_url}/ok/`);
@@ -67,7 +70,36 @@ const runMatch = (match_id, team1, code1, type1, team2, code2, type2) => {
     
 }
 
+const saveMatchResult = async(matchRecord) => {
+    try{
+        matchRecord.status = 'finished';
+        const gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
+        const serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
+        const gameJson = JSON.parse(gameLog);
+        matchRecord.winner = gameJson["initial_game_data"].winnerId - 1;
+        await matchRecord.save();
+        if(matchRecord.isFriendly) {
+            axios.post(`${backendUrl}/match/match-result-friendly/`, {
+                code_id: matchRecord.winner,
+                match_result_id: matchRecord.game_id,
+                server_hash: Buffer.from(serverLog.toString()).toString('base64'),
+                game_hash: Buffer.from(gameLog.toString()).toString('base64'),
+                key_secret: process.env.KEY_SECRET
+            }).then(_ => {
+                console.log('OK');
+            }).catch(err => {
+                console.log(err);
+            });
+        }
+    }catch(e) {
+        await axios.post(process.env.WEBHOOKURL, {
+            content: `Internal Micro error ${e}`
+        });
+    }
+}
+
 module.exports = {
     compileCode,
-    runMatch
+    runMatch,
+    saveMatchResult
 }

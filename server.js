@@ -4,10 +4,15 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
 const logger = require('morgan');
+const schedule = require('node-schedule');
 
 const Code = require("./models/Code");
 const Match = require("./models/Match");
-const { compileCode, runMatch } = require("./utils");
+const {
+    compileCode,
+    runMatch,
+    saveMatchResult
+} = require("./utils");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -141,44 +146,29 @@ app.post('/match-result', async(req, res) => {
         });
         return res.status(400).send(`Match ${req.body.match_id} returned -1!`);
     }
-    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 25) {
+    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 40) {
         polling_count++;
         await new Promise(r => setTimeout(r, 250));
     }
-    if(polling_count >= 25) {
+    if(polling_count >= 40) {
         matchRecord.status = 'failed';
         await matchRecord.save();
         await axios.post(process.env.WEBHOOKURL, {
             content: "Match Failed :: " + JSON.stringify(matchRecord)
         });
+        const currentDate = new Date();
+        const futureDate = new Date(currentDate.getTime() + (5 * 60 * 1000));
+        schedule.scheduleJob(futureDate, async function(matchRecord) {
+            if(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json'))
+                await axios.post(process.env.WEBHOOKURL, {
+                    content: "Failed after 5 min " + JSON.stringify(matchRecord) + "!PANIC!"
+                });
+            else await saveMatchResult(matchRecord)
+        }.bind(null, matchRecord));
         return res.status(400).send(`Match ${req.body.match_id} failed, but scheduled for 5 min`);
-    }
-    matchRecord.status = 'finished';
-    var gameLog, serverLog;
-    try{
-        gameLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/game.json`);
-        serverLog = fs.readFileSync(`${uploadRootDir}/logs/${matchRecord._id}/server.log`);
-        const gameJson = JSON.parse(gameLog);
-        matchRecord.winner = gameJson["initial_game_data"].winnerId - 1;
-        await matchRecord.save();
-    }catch(e) {
-        await axios.post(process.env.WEBHOOKURL, {
-            content: `Internal Micro error ${e}`
-        });
-        return res.status(500).send(`Match ${req.body.match_id} not completed properly!`);
-    }
-    if(matchRecord.isFriendly) {
-        axios.post(`${backendUrl}/match/match-result-friendly/`, {
-            code_id: matchRecord.winner,
-            match_result_id: matchRecord.game_id,
-            server_hash: Buffer.from(serverLog.toString()).toString('base64'),
-            game_hash: Buffer.from(gameLog.toString()).toString('base64'),
-            key_secret: process.env.KEY_SECRET
-        }).then(_ => {
-            return res.status(200).send('OK');
-        }).catch(err => {
-            return res.status(500).send(err);
-        });
+    } else {
+        await saveMatchResult(matchRecord);
+        res.end('OK');
     }
 });
 
