@@ -146,16 +146,13 @@ app.post('/match-result', async(req, res) => {
         });
         return res.status(400).send(`Match ${req.body.match_id} returned -1!`);
     }
-    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 40) {
+    while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 10) {
         polling_count++;
         await new Promise(r => setTimeout(r, 250));
     }
-    if(polling_count >= 40) {
+    if(polling_count >= 10) {
         matchRecord.status = 'failed';
         await matchRecord.save();
-        await axios.post(process.env.WEBHOOKURL, {
-            content: "Match Failed :: " + JSON.stringify(matchRecord)
-        });
         const currentDate = new Date();
         const futureDate = new Date(currentDate.getTime() + (5 * 60 * 1000));
         schedule.scheduleJob(futureDate, async function(matchRecord) {
@@ -165,7 +162,7 @@ app.post('/match-result', async(req, res) => {
                 });
             else await saveMatchResult(matchRecord)
         }.bind(null, matchRecord));
-        return res.status(400).send(`Match ${req.body.match_id} failed, but scheduled for 5 min`);
+        return res.status(200).send(`Match ${req.body.match_id} failed, but scheduled for 5 min`);
     } else {
         await saveMatchResult(matchRecord);
         res.end('OK');
