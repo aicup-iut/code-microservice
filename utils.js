@@ -43,7 +43,7 @@ const runMatch = (match_id, team1, code1, type1, team2, code2, type2) => {
     .then(ans => {
         const haveResource = ans.data.toString() === 'OK';
         if (haveResource) {
-            console.log('Running match...');
+            console.log('Running match1...');
             console.log(match_id, team1, code1, type1, team2, code2, type2);
             axios.post(`${infra_url}/deployment/run_match/`, {
                 match_id: match_id,
@@ -54,15 +54,17 @@ const runMatch = (match_id, team1, code1, type1, team2, code2, type2) => {
                 team2_name: team2,
                 team2_type: type2
             }).then(result => {
-                console.log(result);
+                console.log('Running match2...');
             }).catch(err => {
                 console.error(err);
             });
         } else {
             console.log('No Resource for match...');
             const currentDate = new Date();
-            const futureDate = new Date(currentDate.getTime() + (120 * 1000) + Math.random() * 10);
-            schedule.scheduleJob(futureDate, () => runMatch(_id, code));
+            const futureDate = new Date(currentDate.getTime() + (3 * 60 * 1000) + Math.random() * 10);
+            schedule.scheduleJob(futureDate, function(match_id, team1, code1, type1, team2, code2, type2){
+                runMatch(match_id, team1, code1, type1, team2, code2, type2)
+            }.bind(null, match_id, team1, code1, type1, team2, code2, type2));
         }
     }).catch(err => {
         console.log(err);

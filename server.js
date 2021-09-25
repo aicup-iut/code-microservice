@@ -36,6 +36,7 @@ app.get('/', (_, res) => {
 app.post('/submit', fileUpload({
     limits: { fileSize: 16 * 1024 * 1024 }
 }), async(req, res) => {
+    return res.status(400).send('The time for this has ended');
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }
@@ -102,6 +103,7 @@ app.post('/compile-result', (req, res) => {
 });
 
 app.post('/friendly-match', async(req, res) => {
+    return res.status(400).send('The time for this has ended');
     if(!req.body.first_team_code_id) {
         return res.status(400).send('First team is required.');
     }
@@ -138,14 +140,28 @@ app.post('/match-result', async(req, res) => {
     if(req.body.status === undefined) {
         return res.status(400).send('status is required.');
     }
-    const matchRecord = await Match.findById(req.body.match_id);
-    let polling_count = 0;
     if(req.body.status == -1) {
         await axios.post(process.env.WEBHOOKURL, {
             content: `Match ${req.body.match_id} returned -1! Panic Mode: ON`
         });
         return res.status(400).send(`Match ${req.body.match_id} returned -1!`);
     }
+    const matchRecord = await Match.findById(req.body.match_id);
+    if(!matchRecord.isFriendly) {
+        matchRecord.status = 'failed';
+        await matchRecord.save();
+        const currentDate = new Date();
+        const futureDate = new Date(currentDate.getTime() + (3 * 60 * 1000));
+        schedule.scheduleJob(futureDate, async function(matchRecord){
+            if(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json'))
+                await axios.post(process.env.WEBHOOKURL, {
+                    content: "Failed after 3 min " + JSON.stringify(matchRecord) + "!PANIC!"
+                });
+            else await saveMatchResult(matchRecord)
+        }.bind(this, matchRecord));
+        return res.end('OK');
+    }
+    let polling_count = 0;
     while(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json') && polling_count < 10) {
         polling_count++;
         await new Promise(r => setTimeout(r, 250));
@@ -169,7 +185,34 @@ app.post('/match-result', async(req, res) => {
     }
 });
 
+app.post('/match', async(req, res) => {
+     if(!req.body.team1) {
+        return res.status(400).send('First team is required.');
+    }
+    if(!req.body.team2) {
+        return res.status(400).send('Second team is required.');
+    }
+    const firstTeamRecord = await Code.findById(req.body.team1);
+    const secondTeamRecord = await Code.findById(req.body.team2);
+    if(!firstTeamRecord || !secondTeamRecord) {
+        return res.status(400).send('Invalid team id.');
+    }
+    if(firstTeamRecord.compile_status !== 'Success' || secondTeamRecord.compile_status !== 'Success') {
+        return res.status(400).send('One of the teams is not compiled.');
+    }
+    const match = new Match({
+        firstTeam: firstTeamRecord._id,
+        secondTeam: secondTeamRecord._id,
+        isFriendly: false
+    });
+    await match.save();
+    fs.mkdirSync(`${uploadRootDir}/logs/${match._id}`);
+    runMatch(match._id.toString(), firstTeamRecord.team, firstTeamRecord.code, firstTeamRecord.lang ,secondTeamRecord.team, secondTeamRecord.code, secondTeamRecord.lang);
+    res.end(match._id);
+});
+
 app.post('/delete-code', async(req, res) => {
+    return res.status(400).send('The time for this has ended');
     if(!req.body["code-id"]){
         return res.status(400).send('code-id is required.');
     }
