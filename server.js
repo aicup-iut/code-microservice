@@ -209,7 +209,7 @@ app.post('/match', async(req, res) => {
     await match.save();
     fs.mkdirSync(`${uploadRootDir}/logs/${match._id}`);
     runMatch(match._id.toString(), firstTeamRecord.team, firstTeamRecord.code, firstTeamRecord.lang ,secondTeamRecord.team, secondTeamRecord.code, secondTeamRecord.lang);
-    res.end(match._id);
+    res.end(match._id.toString());
 });
 
 app.get('/result/:id', async(req, res) => {
