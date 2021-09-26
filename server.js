@@ -234,7 +234,7 @@ app.post('/teamcpy', async(req, res) => {
         return res.status(400).send('Invalid team id.');
     }
     const codeFolder = `${uploadRootDir}/codes/${teamRecord.code}`;
-    fs.makeDirSync(`${uploadRootDir}/codes/${req.body.human_id}`);
+    fs.mkdirSync(`${uploadRootDir}/codes/${req.body.human_id}`);
     fse.copySync(codeFolder, `${uploadRootDir}/codes/${req.body.human_id}`);
     res.end('OK');
 });
