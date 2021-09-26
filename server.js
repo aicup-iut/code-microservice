@@ -212,6 +212,14 @@ app.post('/match', async(req, res) => {
     res.end(match._id);
 });
 
+app.get('/result/:id', async(req, res) => {
+    const matchRecord = await Match.findById(req.params.id);
+    if(!matchRecord) {
+        return res.status(400).send('Invalid match id.');
+    }
+    res.send(matchRecord);
+});
+
 app.post('/delete-code', async(req, res) => {
     return res.status(400).send('The time for this has ended');
     if(!req.body["code-id"]){
@@ -223,6 +231,7 @@ app.post('/delete-code', async(req, res) => {
 });
 
 app.post('/teamcpy', async(req, res) => {
+    return res.status(400).send('The time for this has ended');
     if(!req.body.team_id) {
         return res.status(400).send('team_id is required.');
     }
