@@ -3,6 +3,7 @@ const fileUpload = require('express-fileupload');
 const mongoose = require('mongoose');
 const axios = require('axios');
 const fs = require('fs');
+const fse = require('fs-extra');
 const logger = require('morgan');
 const schedule = require('node-schedule');
 
@@ -218,6 +219,23 @@ app.post('/delete-code', async(req, res) => {
     }
     const _doc = await Code.findById(req.body["code-id"]);
     fs.rmSync(`${uploadRootDir}/codes/${_doc.code}/output`, { recursive: true, force: true });
+    res.end('OK');
+});
+
+app.post('/teamcpy', async(req, res) => {
+    if(!req.body.team_id) {
+        return res.status(400).send('team_id is required.');
+    }
+    if(!req.body.human_id) {
+        return res.status(400).send('human_id is required.');
+    }
+    const teamRecord = await Code.findById(req.body.team_id);
+    if(!teamRecord) {
+        return res.status(400).send('Invalid team id.');
+    }
+    const codeFolder = `${uploadRootDir}/codes/${teamRecord.code}`;
+    fs.makeDirSync(`${uploadRootDir}/codes/${req.body.human_id}`);
+    fse.copySync(codeFolder, `${uploadRootDir}/codes/${req.body.human_id}`);
     res.end('OK');
 });
 
