@@ -152,7 +152,7 @@ app.post('/match-result', async(req, res) => {
         matchRecord.status = 'failed';
         await matchRecord.save();
         const currentDate = new Date();
-        const futureDate = new Date(currentDate.getTime() + (3 * 60 * 1000));
+        const futureDate = new Date(currentDate.getTime() + (1 * 60 * 1000));
         schedule.scheduleJob(futureDate, async function(matchRecord){
             if(!fs.readdirSync(`${uploadRootDir}/logs/${matchRecord._id}`).includes('game.json'))
                 await axios.post(process.env.WEBHOOKURL, {
