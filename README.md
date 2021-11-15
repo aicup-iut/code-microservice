@@ -1,8 +1,12 @@
-# Code Micro Service
+# AICup Code Micro-Service 
+
+![AICup](https://img.shields.io/badge/AICup-red)
+![version](https://img.shields.io/badge/version-1.0.0-important.svg)
+
 
 ## Files Directories
 - Raw Codes: `${file_root}/codes/${code_folder_name}/input/main.{py,cpp,java}`
-- Maps: `${file_root}/maps/map.json` (Always take map.json)
+- Map: `${file_root}/maps/map.json`
 - Logs: 
   - `${file_root}/logs/${match_id}/game.json`
   - `${file_root}/logs/${match_id}/server.log`
@@ -24,4 +28,4 @@
 - /match-result
   - POST
   - { match_id: string, winner: boolean }
-  - winner: 0 means first team won
+  - winner: false means first team won

@@ -16,8 +16,6 @@ services:
   micro_db:
     image: 'mongo'
     container_name: 'micro_db'
-    ports: #we need this for accessing db from outside!(For Testing)
-      - '4040:27017'
     volumes: 
       - micro_db_data:/data/db
     env_file: 

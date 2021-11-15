@@ -23,7 +23,7 @@ const db_user_name = process.env.MONGO_INITDB_ROOT_USERNAME || 'root';
 const db_password = process.env.MONGO_INITDB_ROOT_PASSWORD || 'root';
 const db_name = process.env.DB_NAME || 'aicup';
 const db_host = process.env.DB_HOST || 'localhost';
-const db_port = process.env.DB_PORT || 4040;
+const db_port = process.env.DB_PORT || 27017;
 const connectionString = `mongodb://${db_user_name}:${db_password}@${db_host}:${db_port}/${db_name}?authSource=admin`;
 
 app.use(logger('dev'));
@@ -37,7 +37,6 @@ app.get('/', (_, res) => {
 app.post('/submit', fileUpload({
     limits: { fileSize: 16 * 1024 * 1024 }
 }), async(req, res) => {
-    return res.status(400).send('The time for this has ended');
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }
@@ -104,7 +103,6 @@ app.post('/compile-result', (req, res) => {
 });
 
 app.post('/friendly-match', async(req, res) => {
-    return res.status(400).send('The time for this has ended');
     if(!req.body.first_team_code_id) {
         return res.status(400).send('First team is required.');
     }
@@ -221,30 +219,11 @@ app.get('/result/:id', async(req, res) => {
 });
 
 app.post('/delete-code', async(req, res) => {
-    return res.status(400).send('The time for this has ended');
     if(!req.body["code-id"]){
         return res.status(400).send('code-id is required.');
     }
     const _doc = await Code.findById(req.body["code-id"]);
     fs.rmSync(`${uploadRootDir}/codes/${_doc.code}/output`, { recursive: true, force: true });
-    res.end('OK');
-});
-
-app.post('/teamcpy', async(req, res) => {
-    return res.status(400).send('The time for this has ended');
-    if(!req.body.team_id) {
-        return res.status(400).send('team_id is required.');
-    }
-    if(!req.body.human_id) {
-        return res.status(400).send('human_id is required.');
-    }
-    const teamRecord = await Code.findById(req.body.team_id);
-    if(!teamRecord) {
-        return res.status(400).send('Invalid team id.');
-    }
-    const codeFolder = `${uploadRootDir}/codes/${teamRecord.code}`;
-    fs.mkdirSync(`${uploadRootDir}/codes/${req.body.human_id}`);
-    fse.copySync(codeFolder, `${uploadRootDir}/codes/${req.body.human_id}`);
     res.end('OK');
 });
 
